@@ -28,27 +28,18 @@ def bakery_by_id(id):
     bakery = Bakery.query.filter(Bakery.id == id).first()
 
     if request.method == "PATCH":
-        json_dict = request.get_json()
-        for each in json_dict:
-            setattr(bakery, each, json_dict.get(each))
+        newname = request.form.get('name')
+        bakery.name = newname
+        
         db.session.add(bakery)
         db.session.commit()
 
         bakery_serialized = bakery.to_dict()
         return make_response ( bakery_serialized, 200  )
-    
-    elif request.method == "DELETE":
-        for each in bakery.baked_goods:
-            db.session.delete(each)
-            db.session.commit()
-        db.session.delete(bakery)
-        db.session.commit()
-        return {"success": True}, 200
+
 
 @app.route('/baked_goods', methods = ['POST'])
 def add_baked_good():
-    json_dict = request.get_json()
-    print(json_dict)
 
     new = BakedGood(
         name = request.form.get('name'),
@@ -58,6 +49,17 @@ def add_baked_good():
     db.session.add(new)
     db.session.commit()
     return new.to_dict(),201
+
+@app.route('/baked_goods/<int:id>', methods = ['DELETE'])
+def delete_baked_good(id):
+    baked_good = BakedGood.query.filter(BakedGood.id == id).first()
+
+    if baked_good:
+        db.session.delete(baked_good)
+        db.session.commit()
+        return {"success": True}, 200
+    else:
+        return {}, 400
 
 
 @app.route('/baked_goods/by_price')
